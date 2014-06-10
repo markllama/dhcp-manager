@@ -12,6 +12,11 @@ basedn = "dc=lamourine,dc=homeunix,dc=org"
 filter = "(objectClass=dhcpHost)"
 attrs = ['cn']
 
+def add_record():
+
+    dn = "cn=test," + basedn
+    
+
 if __name__ == "__main__":
     c = ldap.initialize("ldap://%s" % hostname)
     try:

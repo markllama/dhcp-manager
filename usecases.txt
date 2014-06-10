@@ -1,0 +1,21 @@
+DHCP manager
+
+Operations on a DHCP service backed by an LDAP database
+
+Common operations:
+
+add host
+delete host
+modify host statements
+modify host options
+query host list by subnet
+query host by (name|mac|IP|option RE value)
+
+
+add subnet
+delete subnet
+modify subnet statements
+modify subnet options
+query subnet by IP|
+
+dhcp-manager <object> <action> <options>

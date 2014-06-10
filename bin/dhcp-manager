@@ -1,0 +1,28 @@
+#!/usr/bin/python
+"""
+dhcp-manager <object> <action> [<arguments>]
+dhcp-manager server list
+"""
+
+import argparse
+import ldap
+
+parser = argparse.ArgumentParser(description="foobar")
+
+parser.add_argument("obj")
+parser.add_argument("action")
+
+parser.add_argument("--server")
+parser.add_argument("--basedn")
+parser.add_argument("--username")
+parser.add_argument("--password")
+
+if __name__ == "__main__":
+   print "hello"
+   args = parser.parse_args()
+
+   if args.obj == "server":
+      print "checking for servers"
+
+
+   print "server = '%s'" % args.server
