@@ -9,7 +9,7 @@ hostname = "pi1.lamourine.homeunix.org"
 binddn = "cn=admin,dc=lamourine,dc=homeunix,dc=org"
 bindpw = "oracle"
 basedn = "dc=lamourine,dc=homeunix,dc=org"
-filter = "(objectClass=dhcpHost)"
+filter = "(objectClass=dhcpServer)"
 attrs = ['cn']
 
 def add_record():
@@ -26,10 +26,12 @@ if __name__ == "__main__":
     except ldap.LDAPError, e:
         if type(e.message) == dict and e.message.has_key('desc'):
             print e.message['desc']
-        else: 
+     
+   else: 
             print e
             sys.exit()
 
     r = c.search_s(basedn, ldap.SCOPE_SUBTREE, filter, attrs)
-    results = ldaphelper.get_search_results(r)
-    print "\n".join([h.get_dn() for h in results])
+    print r
+    #results = ldaphelper.get_search_results(r)
+    #print "\n".join([h.get_dn() for h in results])

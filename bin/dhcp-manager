@@ -12,17 +12,100 @@ parser = argparse.ArgumentParser(description="foobar")
 parser.add_argument("obj")
 parser.add_argument("action")
 
-parser.add_argument("--server")
-parser.add_argument("--basedn")
-parser.add_argument("--username")
-parser.add_argument("--password")
+parser.add_argument("--verbose")
+parser.add_argument("--hostname", required=True)
+parser.add_argument("--basedn", required=True)
+parser.add_argument("--username", required=True)
+parser.add_argument("--password", required=True)
+
+class Server():
+
+
+   methods = {
+      
+   }
+
+   filter = '(objectClass=dhcpServer)'
+
+   def __init__(self, name):
+      
+
+   @staticmethod
+   def list(connection, basedn):
+      attrs = ['cn']
+      r = connection.search_s(basedn, ldap.SCOPE_SUBTREE, Server.filter, attrs)
+      return r
+
+class Service():
+
+   def __init__(self):
+      pass
+
+   @staticmethod
+   def list(connection, basedn):
+      filter = '(objectClass=dhcpService)'
+      attrs = ['cn']
+      r = connection.search_s(basedn, ldap.SCOPE_SUBTREE, filter, attrs)
+      return r
+
+class Subnet():
+
+   def __init__(self):
+      pass
+
+   @staticmethod
+   def list(connection, basedn):
+      filter = '(objectClass=dhcpSubnet)'
+      attrs = ['cn']
+      r = connection.search_s(basedn, ldap.SCOPE_SUBTREE, filter, attrs)
+      return r
+
+class Host():
+
+   def __init__(self):
+      pass
+
+   @staticmethod
+   def list(connection, basedn):
+      filter = '(objectClass=dhcpHost)'
+      attrs = ['cn']
+      r = connection.search_s(basedn, ldap.SCOPE_SUBTREE, filter, attrs)
+      return r
+
+
+objects = {
+   'server': Server,
+   'service': Service,
+   'subnet': Subnet,
+   'host': Host
+}
+
+def connect(hostname, basedn, username, password):
+   c = ldap.initialize("ldap://%s" % hostname)
+   binddn = "cn=%s,%s" % (username, basedn)
+   try:
+      # 
+      result = c.simple_bind_s(binddn, password)
+      print result
+   except ldap.LDAPError, e:
+      if type(e.message) == dict and e.message.has_key('desc'):
+         print e.message['desc']
+      else: 
+         print e
+         sys.exit()
+   return c
+
+   #r = c.search_s(basedn, ldap.SCOPE_SUBTREE, filter, attrs)
+
 
 if __name__ == "__main__":
-   print "hello"
+
    args = parser.parse_args()
+   c = connect(args.hostname, args.basedn, args.username, args.password)
 
-   if args.obj == "server":
-      print "checking for servers"
+   
 
+   obj = objects[args.obj]
+   sl = obj.list(c, args.basedn)
+   print sl
 
-   print "server = '%s'" % args.server

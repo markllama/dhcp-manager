@@ -51,3 +51,6 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
+# Emacs backup and journal files
+*~
+\#*
