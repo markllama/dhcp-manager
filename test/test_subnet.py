@@ -7,13 +7,15 @@ import ldap
 
 import dhcpmanager
 
+from auth import ldap_server
+
 class TestSubnet(unittest.TestCase):
 
     def setUp(self):
-        self.hostname = "192.168.1.12"
-        self.basedn = "dc=lamourine,dc=homeunix,dc=org"
-        self.username = "admin"
-        self.password = "oracle"
+        self.hostname = ldap_server['hostname']
+        self.basedn = ldap_server['basedn']
+        self.username = ldap_server['username']
+        self.password = ldap_server['password']
         self.connection = ldap.initialize("ldap://%s" % self.hostname)
         self.binddn = "cn=%s,%s" % (self.username, self.basedn)
         r = self.connection.simple_bind_s(self.binddn, self.password)
