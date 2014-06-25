@@ -2,6 +2,10 @@
 """
 dhcp-manager <object> <action> [<arguments>]
 dhcp-manager server list
+
+dhcp-manager host create --name <hostname> --mac <mac> --ip <addr>
+dhcp-manager host delete --name <hostname>
+dhcp-manager host change --name <hostname>  [--mac <mac>] [--ip <addr>]
 """
 
 import argparse
@@ -11,6 +15,7 @@ parser = argparse.ArgumentParser(description="foobar")
 
 parser.add_argument("obj")
 parser.add_argument("action")
+parser.add_argument("--name")
 
 parser.add_argument("--verbose")
 parser.add_argument("--hostname", required=True)
@@ -18,59 +23,183 @@ parser.add_argument("--basedn", required=True)
 parser.add_argument("--username", required=True)
 parser.add_argument("--password", required=True)
 
-class Server():
+class LdapObject(object):
 
+   filter = None
+   object_classes = []
+   attrmap = {}
+   required = ['cn']
 
-   methods = {
+   def __init__(self, dn=None):
+      self.dn = dn
+      for k in self.__class__.attrmap.keys():
+         self.__dict__[self.__class__.attrmap[k]] = None
+
+   @classmethod
+   def create(cls, connection):
+      pass
+
+   @classmethod
+   def list(cls, connection, basedn):
+      attrs = []
+      print "filter = %s" % filter
+      r = connection.search_s(basedn, ldap.SCOPE_SUBTREE, cls.filter)
+      return r
+
+   def retrieve(self, connection, basedn):
+      filter = "(& %s (cn=%s))" % (self.__class__.filter, self.cn)
+      r = connection.search_s(basedn, ldap.SCOPE_SUBTREE, self.__class__.filter)
+      if len(r) != 1:
+         raise "wrong number of matches: expected 1, actual %d" % len(r)
+      (dn, attrs) = r[0]
       
-   }
+      self.dn = dn
+      for k in attrs:
+         if k in self.__class__.attrmap.keys():
+            if len(attrs[k]) == 1:
+               self.__dict__[self.__class__.attrmap[k]] = attrs[k][0]
+            else:
+               self.__dict__[self.__class__.attrmap[k]] = attrs[k]
+         else:
+            print "attr %s not in attrmap" % k
+
+class Server(LdapObject):
 
    filter = '(objectClass=dhcpServer)'
+   classes = ['top', 'dhcpServer']
+   attrmap = {
+      'objectClass': 'classes',
+      'cn': 'cn',
+      'dhcpServiceDN': 'service_dn',
+      'dhcpLocatorDN': 'locator_dn',
+      'dhcpVersion': 'version',
+      'dhcpImplementation': 'implementation',
+      'dhcpHashBucketAssignment': 'hash_bucket_assignment',
+      'dhcpDelayedServiceParameter': 'delayed_service_parameter',
+      'dhcpMaxClientLeadTime': 'max_client_lead_time',
+      'dhcpFailOverEndpointState': 'failover_endpoint_state',
+      'dhcpStatements': 'statements',
+      'dhcpComments': 'comments',
+      'dhcpOption': 'option' 
+   }
 
-   def __init__(self, name):
-      
+   def __init__(self, dn=None, cn=None, service_dn=None):
 
-   @staticmethod
-   def list(connection, basedn):
-      attrs = ['cn']
-      r = connection.search_s(basedn, ldap.SCOPE_SUBTREE, Server.filter, attrs)
-      return r
+      super(Server, self).__init__()
+      self.dn = dn
+      self.cn = cn
+      self.service_dn = service_dn
 
-class Service():
 
-   def __init__(self):
-      pass
+class Service(LdapObject):
 
-   @staticmethod
-   def list(connection, basedn):
-      filter = '(objectClass=dhcpService)'
-      attrs = ['cn']
-      r = connection.search_s(basedn, ldap.SCOPE_SUBTREE, filter, attrs)
-      return r
+   filter = '(objectClass=dhcpService)' 
+   classes = ['top', 'dhcpService']
+   attrmap = { 'dhcpPrimaryDN': 'primary_dn', 
+               'dhcpSecondaryDN': 'secondary_dn',
+               'dhcpServerDN': 'server_dn',
+               'dhcpSharedNetworkDN': 'shared_network_dn',
+               'dhcpSubnetDN': 'subnet_dn',
+               'dhcpGroupDN': 'group_dn',
+               'dhcpHostDN': 'host_dn',
+               'dhcpClassesDN': 'classes_dn',
+               'dhcpOptionsDN': 'options_dn',
+               'dhcpZoneDN': 'zone_dn', 
+               'dhcpKeyDN': 'key_dn',
+               'dhcpFailOverPeerDN': 'failover_peer_dn',
+               'dhcpStatements': 'statements',
+               'dhcpComments': 'comments', 
+               'dhcpOption': 'option'
+            }
+   required = ['cn']
 
-class Subnet():
+   def __init__(self, dn=None, cn=None, service_dn=None):
 
-   def __init__(self):
-      pass
+      super(Service, self).__init__()
+      self.dn = dn
+      self.cn = cn
+      self.service_dn = service_dn
 
-   @staticmethod
-   def list(connection, basedn):
-      filter = '(objectClass=dhcpSubnet)'
-      attrs = ['cn']
-      r = connection.search_s(basedn, ldap.SCOPE_SUBTREE, filter, attrs)
-      return r
+class Subnet(LdapObject):
 
-class Host():
+   filter = '(objectClass=dhcpSubnet)'
+   attrmap = { 
+      'cn': 'cn',
+      'dhcpPrimaryDN': 'primary_dn', 
+      'dhcpSecondaryDN': 'secondary_dn',
+      'dhcpServerDN': 'server_dn',
+      'dhcpSharedNetworkDN': 'shared_network_dn',
+      'dhcpSubnetDN': 'subnet_dn',
+      'dhcpGroupDN': 'group_dn',
+      'dhcpHostDN': 'host_dn',
+      'dhcpClassesDN': 'classes_dn',
+      'dhcpOptionsDN': 'options_dn',
+      'dhcpZoneDN': 'zone_dn', 
+      'dhcpKeyDN': 'key_dn',
+      'dhcpFailOverPeerDN': 'failover_peer_dn',
+      'dhcpStatements': 'statements',
+      'dhcpComments': 'comments', 
+      'dhcpOption': 'option'
+   }
+   required = ['cn', 'dhcpNetmask']
 
-   def __init__(self):
-      pass
+   def __init__(self, dn=None, cn=None, service_dn=None):
 
-   @staticmethod
-   def list(connection, basedn):
-      filter = '(objectClass=dhcpHost)'
-      attrs = ['cn']
-      r = connection.search_s(basedn, ldap.SCOPE_SUBTREE, filter, attrs)
-      return r
+      super(Subnet, self).__init__()
+      self.dn = dn
+      self.cn = cn
+      self.service_dn = service_dn
+
+class Host(LdapObject):
+
+   filter = '(objectClass=dhcpHost)'
+   object_classes = ['top', 'dhcpHost', 'dhcpOptions']
+   attrmap = {
+      'name': 'cn',
+      'dhcpLeaseDN': 'lease_dn',
+      'dhcpHWAddress': 'hw_address',
+      'dhcpOptionsDN': 'options',
+      'dhcpStatements': 'statements',
+      'dhcpComments': 'comments',
+      'dhcpOption': 'option' 
+   }
+   required = ['cn']
+   
+
+   def __init__(self, hostname=None, mac=None, ipaddr=None):
+
+      super(Host, self).__init__()
+      #self.dn = dn
+      #self.cn = cn
+      #self.service_dn = service_dn
+      self._hostname = hostname
+      self._mac = mac,
+      self._ipaddr = ipaddr
+
+   @property
+   def hostname(self):
+      return self._hostname
+
+   @hostname.setter
+   def hostname(self, newname):
+      self._hostname = newname
+
+   @property
+   def mac(self):
+      return self.mac
+
+   @mac.setter
+   def mac(self, newmac):
+      self._mac = newmac
+
+   @property
+   def ipaddr(self):
+      return self._ipaddr
+
+   @ipaddr.setter
+   def ipaddr(self, newipaddr):
+      self._ipaddr = newipaddr
+
 
 
 objects = {
@@ -103,9 +232,19 @@ if __name__ == "__main__":
    args = parser.parse_args()
    c = connect(args.hostname, args.basedn, args.username, args.password)
 
-   
-
    obj = objects[args.obj]
-   sl = obj.list(c, args.basedn)
-   print sl
+   if args.action == 'list':
+      sl = obj.list(c, args.basedn)
+      print sl
+   elif args.action == 'create':
+      newobj = obj(args.name)
+      newobj.create(c)
+   elif args.action == 'delete':
+      newobj = obj(cn=args.name)
+   else:
+      ldapobj = obj(cn=args.name)
+      r = ldapobj.retrieve(c, args.basedn)
+      print ldapobj.__dict__.keys()
+      print ldapobj.cn
+      print ldapobj.service_dn
 
