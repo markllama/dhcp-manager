@@ -10,7 +10,6 @@ class Server(LdapObject):
    filter = '(objectClass=dhcpServer)'
    classes = ['top', 'dhcpServer']
    attrmap = {
-      'objectClass': 'classes',
       'cn': 'cn',
       'dhcpServiceDN': 'service_dn',
       'dhcpLocatorDN': 'locator_dn',
@@ -30,20 +29,20 @@ class Server(LdapObject):
       super(Server, self).__init__()
       self.dn = dn
       self.cn = cn
-      self.service_dn = service_dn
+#      self.service_dn = service_dn
 
-      self.locator_dn = None
-      self.version = None
-      self.implementation = None
-      self.hash_bucket_assignment = None
-      self.delayed_service_parameter = None
-      self.max_client_lead_time = None
-      self.failover_endpoint_state = None
+#      self.locator_dn = None
+#      self.version = None
+#      self.implementation = None
+#      self.hash_bucket_assignment = None
+#      self.delayed_service_parameter = None
+#      self.max_client_lead_time = None
+#      self.failover_endpoint_state = None
 
-      self.statements = []
-      self.commments = []
+#      self.statements = []
+#      self.commments = []
 
-      self.options = []
+#      self.options = []
       # declarations
       # self.primary # true = primary, false = secondary
       # self.address #
@@ -58,3 +57,13 @@ class Server(LdapObject):
       # self.load_balance_max_seconds
       # 
 
+   @classmethod
+   def fromldap(cls, ldaphash):
+      
+      print "creating a server"
+      print ldaphash
+      
+      instance = cls()
+      instance.dn = ldaphash[0]
+      instance.cn = ldaphash[1]['cn']
+      return instance

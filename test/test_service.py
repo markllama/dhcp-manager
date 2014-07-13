@@ -9,7 +9,7 @@ import dhcpmanager
 
 from auth import ldap_server
 
-class TestDhcpServer(unittest.TestCase):
+class TestDhcpServices(unittest.TestCase):
 
     def setUp(self):
         self.hostname = ldap_server['hostname']
@@ -21,19 +21,21 @@ class TestDhcpServer(unittest.TestCase):
         r = self.connection.simple_bind_s(self.binddn, self.password)
 
     def testConstructor(self):
-        s = dhcpmanager.Server()
+        s = dhcpmanager.Service()
 
-    def testListServers(self):
-        servers = dhcpmanager.Server.list(self.connection, self.basedn)
-        print servers
+    def testListServices(self):
+        services = dhcpmanager.Service.list(self.connection, self.basedn)
+        print services
 
-    def testRetrieveServer(self):
+    def testRetrieveService(self):
         server_cn = 'pi1'
-        s = dhcpmanager.Server(cn=server_cn)
+        s = dhcpmanager.Service(cn=server_cn)
         s.retrieve(self.connection, self.basedn)
 
         self.assertEqual(len(s.classes), 2)
-        self.assertEqual(s.cn, 'pi1')
+        self.assertEqual(s.cn, 'DHCP Config')
+        self.assertEqual(len(s.statements), 8)
+        self.assertEqual(len(s.options), 2)
         
 if __name__ == "__main__":
     unittest.main()
